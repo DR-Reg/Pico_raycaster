@@ -164,7 +164,9 @@ while True:
     #draw_vline(50, 15, HEIGHT-15, 5);
     
     # draw_rect(100,50,5,5)
-    draw_rect(100,50,5,5,45)
+    display.character(2+48,60,125,2)
+    display.character(5+48,70,125,2)
+    draw_rect(100,50,15,15,25)
 
     display.update()
     time.sleep(0.01)
