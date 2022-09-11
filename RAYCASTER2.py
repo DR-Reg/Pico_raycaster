@@ -188,4 +188,4 @@ while True:
     elif button_a.read():
         player.rotate(0.1)
     display.update()
-    time.sleep(0.01)
+    # time.sleep(0.01)
