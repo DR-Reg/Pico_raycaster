@@ -12,6 +12,7 @@ display.set_backlight(1.0)
 HEIGHT, WIDTH = display.get_bounds() # flipped as we use it horizontally
 
 threed = True
+rnd = False
 
 button_a = Button(12)
 button_b = Button(13)
@@ -23,22 +24,29 @@ pi = 3.14
 BLACK = display.create_pen(0,0,0)
 WHITE = display.create_pen(255,255,255)
 GREEN = display.create_pen(0,255,0)
-RED = display.create_pen(255,0,0)
-BRED = display.create_pen(230,0,0)
+# RED = display.create_pen(255,0,0)
+# BRED = display.create_pen(230,0,0)
 DRED = display.create_pen(179,0,0)
+reds = [display.create_pen(i,0,0) for i in range(20,255,2)]
+grays = [display.create_pen(round(i*0.1),round(i*0.1),round(i*0.3)) for i in range(20,180,5)]
 BLOCK_SIZE = 10
 LEVEL = [
 [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
 [1,0,0,0,0,0,0,1,1,1,0,0,1,0,0,0,0,0,1,0,0,0,0,1],
-[1,1,1,1,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1,0,0,0,0,1],
+[1,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,1],
+[1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,1],
+[1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,1],
+[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1],
+[1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+[1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
 [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
 [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
 [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+[1,1,1,1,1,0,0,0,1,0,0,1,1,1,0,0,0,0,0,1,1,1,1,1],
+[1,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1],
+[1,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1],
+[1,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1],
+[1,0,0,0,0,0,0,0,1,0,0,0,0,1,1,0,1,1,0,0,0,0,0,1],
 [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 ]
 def draw_level():
@@ -46,7 +54,7 @@ def draw_level():
         for j,e in enumerate(row):
             if e: display.rectangle(i*BLOCK_SIZE,j*BLOCK_SIZE,BLOCK_SIZE-1,BLOCK_SIZE-1)
 def lerp(x,mn,mx,MN,MX):
-    return (((x-mn)/mx) * (MX-MN)) + MN
+    return (((x-mn)/(mx-mn)) * (MX-MN)) + MN
 class Player:
     def __init__(self,x,y,sz=5):
         self.x = x
@@ -65,7 +73,7 @@ class Player:
         self.y += k * self.dy
     def rotate(self,a):
         self.a += a
-        a = round(a,2)
+        if rnd: a = round(a,2)
         if self.a < 0: self.a += 2*pi
         elif self.a > 2*pi: self.a -= 2*pi
         self.dx = cos(self.a)
@@ -87,7 +95,7 @@ class Player:
         a = self.a + rela
         if a >= 2*pi: a -= 2*pi
         if a < 0: a += 2*pi
-        a = round(a,2)
+        if rnd: a = round(a,2)
         vline = int(self.x / BLOCK_SIZE) + (a < pi/2 or a > 3*pi/2) # closest vertical line we are pointing at
                                                                     # i.e., if our angle is pointing right, add one
                                                                     # to floored value to get the vline to our right
@@ -96,7 +104,7 @@ class Player:
         rx,ry = vline,int(self.y/BLOCK_SIZE) + (a < pi)
         if a == 0 or a == pi: m = 0
         else:m = tan(a) # tangent of angle = dy/dx
-        m = round(m,2)
+        if rnd: m = round(m,2)
         dx,dy = k,k*m
         rx += dx
         ry += dy
@@ -123,7 +131,7 @@ class Player:
         rx,ry = int(self.x/BLOCK_SIZE) + (a < pi/2 or a > 3*pi/2),hline
         if a == 0 or a == pi: m = 0
         else: m = 1/tan(a) # 1/tangent of angle = dx/dy
-        m = round(m,2)
+        if rnd: m = round(m,2)
         dx,dy = k*m,k
         rx += dx
         ry += dy
@@ -159,20 +167,38 @@ class Player:
         cr = 0
         while i < mx:
             a = i * pi / 180
+            if a < 0: a += 2*pi
+            elif a>2*pi: a -= 2*pi
             rx,ry,dist,vert = self.get_ray(a)
             
-            if vert: display.set_pen(BRED)
-            else: display.set_pen(DRED)
+            # if vert: display.set_pen(BRED)
+            # else: display.set_pen(DRED)
+            cval = int(lerp(dist,0,20,len(reds),0))
+            if cval < 0: cval = 0
+            elif cval > len(reds): cval = len(reds)
+            
+            display.set_pen(reds[cval])
             dist *= cos(a)
-            barspace = lerp(dist,0,20,0,HEIGHT/2)
+            barspace = lerp(dist,0,20,10,HEIGHT/2)
             display.rectangle(int(barspace),int(cr*thickness),HEIGHT - int(barspace)*2,int(thickness))
             i += stp
             cr += 1
+def draw_background():
+    bheight = round(HEIGHT/(2*len(grays)))
+    print(HEIGHT,bheight,len(grays))
+    bnum = len(grays)
+    for i in range(0,bnum):
+        by = i * bheight
+        display.set_pen(grays[len(grays)-1-i])
+        display.rectangle(by, 0, bheight, WIDTH)
+        display.set_pen(grays[i])
+        display.rectangle(HEIGHT-by, 0, bheight, WIDTH)
 player = Player(50,40)
 while True:
     display.set_pen(BLACK)
     display.clear()
     if threed:
+        draw_background()
         player.draw_rays(-30,30,1)
     else:
         display.set_pen(WHITE)
